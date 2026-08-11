@@ -11,7 +11,7 @@ import { useAppStore } from '@/stores/app'
 import { formatBytesPerSecondWithConfig, formatBytesWithConfig, formatDateTime, getStatus, getUptimeDays } from '@/utils/helper'
 import { getDiskPercentage, getMemoryPercentage, getTrafficUsed, getTrafficUsedPercentage, hasTrafficLimit } from '@/utils/nodeMetricsHelper'
 import { getOSImage, getOSName } from '@/utils/osImageHelper'
-import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
+import { getRegionCode, getRegionDisplayName, getRegionFlagCode } from '@/utils/regionHelper'
 import { formatCurrencyValue, formatPriceWithCycle, getDaysUntilExpired, getExpireStatus, getRemainingValue, isFreePrice, parseTags } from '@/utils/tagHelper'
 
 const props = withDefaults(defineProps<{
@@ -189,8 +189,21 @@ function getRegionAltText(region: string): string {
   return getRegionDisplayName(region) || getRegionCode(region)
 }
 
-function hasRegion(region: string | null | undefined): boolean {
-  return Boolean(region?.trim())
+function getFlagSrc(region: string | null | undefined): string {
+  const code = getRegionFlagCode(region)
+  return code ? `/images/flags/${code}.svg` : ''
+}
+
+function handleRegionFlagError(event: Event): void {
+  const image = event.target
+  if (image instanceof HTMLImageElement)
+    image.hidden = true
+}
+
+function handleRegionFlagLoad(event: Event): void {
+  const image = event.target
+  if (image instanceof HTMLImageElement)
+    image.hidden = false
 }
 </script>
 
@@ -251,10 +264,12 @@ function hasRegion(region: string | null | undefined): boolean {
         </button>
         <img :src="getOSImage(props.node.os)" :alt="getOSName(props.node.os)" class="size-4">
         <img
-          v-if="hasRegion(props.node.region)"
-          :src="`/images/flags/${getRegionCode(props.node.region)}.svg`"
+          v-if="getFlagSrc(props.node.region)"
+          :src="getFlagSrc(props.node.region)"
           :alt="getRegionAltText(props.node.region)"
           class="size-5 shrink-0"
+          @error="handleRegionFlagError"
+          @load="handleRegionFlagLoad"
         >
       </div>
     </template>

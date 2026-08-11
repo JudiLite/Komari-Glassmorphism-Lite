@@ -20,7 +20,7 @@ import { getCpuBenchmarkRating, getPassMarkCpuLookupUrl } from '@/utils/cpuBench
 import * as financeHelper from '@/utils/financeHelper'
 import { formatBytesPerSecondWithConfig, formatBytesWithConfig, formatUptimeWithFormat } from '@/utils/helper'
 import { getOSImage, getOSName } from '@/utils/osImageHelper'
-import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
+import { getRegionCode, getRegionDisplayName, getRegionFlagCode } from '@/utils/regionHelper'
 
 import { formatPrice, formatPriceWithCycle, getExpireStatus, getExpireText, isFreePrice, parseTags } from '@/utils/tagHelper'
 
@@ -183,6 +183,22 @@ const formatBytes = (bytes: number) => formatBytesWithConfig(bytes, appStore.byt
 const formatBytesPerSecond = (bytes: number) => formatBytesPerSecondWithConfig(bytes, appStore.byteDecimals)
 const formatUptime = (seconds: number) => formatUptimeWithFormat(seconds, 'minute')
 const getRegionAltText = (region: string) => getRegionDisplayName(region) || getRegionCode(region)
+const getFlagSrc = (region: string | null | undefined) => {
+  const code = getRegionFlagCode(region)
+  return code ? `/images/flags/${code}.svg` : ''
+}
+
+function handleRegionFlagError(event: Event): void {
+  const image = event.target
+  if (image instanceof HTMLImageElement)
+    image.hidden = true
+}
+
+function handleRegionFlagLoad(event: Event): void {
+  const image = event.target
+  if (image instanceof HTMLImageElement)
+    image.hidden = false
+}
 
 interface InfoItem {
   label: string
@@ -494,7 +510,14 @@ const metricCards = computed<MetricCard[]>(() => appStore.detailMetricCardOrder.
           <Icon icon="tabler:arrow-left" :width="16" :height="16" />
         </Button>
         <div class="min-w-0 text-lg font-bold flex gap-2 items-center">
-          <img :src="`/images/flags/${getRegionCode(data.region)}.svg`" :alt="getRegionAltText(data.region)" class="size-6">
+          <img
+            v-if="getFlagSrc(data.region)"
+            :src="getFlagSrc(data.region)"
+            :alt="getRegionAltText(data.region)"
+            class="size-6"
+            @error="handleRegionFlagError"
+            @load="handleRegionFlagLoad"
+          >
           <span class="truncate">{{ data.name }}</span>
         </div>
         <Badge :variant="data.online ? 'default' : 'destructive'" class="text-xs !rounded">

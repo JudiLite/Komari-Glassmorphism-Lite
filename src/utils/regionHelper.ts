@@ -1555,23 +1555,72 @@ export const emojiToRegionMap: Record<string, { en: string, zh: string, code: st
 interface RegionEntry { emoji: string, en: string, zh: string, code: string, aliases: string[] }
 
 const CJK_UNIFIED_IDEOGRAPH_REGEX = /\p{Script=Han}/u
+const REGION_TEXT_SEPARATOR_REGEX = /[\s,;:/|()[\]{}._-]+/u
+const ISO_REGION_CODE_REGEX = /^[a-z]{2}$/i
+
+function getRegionEntryByEmoji(emoji: string): RegionEntry | null {
+  const direct = emojiToRegionMap[emoji]
+  if (!direct)
+    return null
+
+  return { emoji, en: direct.en, zh: direct.zh, code: direct.code, aliases: direct.aliases }
+}
+
+function getRegionEntryByText(text: string): RegionEntry | null {
+  const lowerText = text.toLowerCase()
+  for (const [emoji, info] of Object.entries(emojiToRegionMap)) {
+    if (info.code.toLowerCase() === lowerText || info.aliases.some(alias => alias.toLowerCase() === lowerText))
+      return { emoji, en: info.en, zh: info.zh, code: info.code, aliases: info.aliases }
+  }
+
+  return null
+}
+
+function getRegionEntryFromMixedText(text: string): RegionEntry | null {
+  const flagMatches = text.match(REGION_FLAG_REGEX) ?? []
+  for (const flag of flagMatches) {
+    const entry = getRegionEntryByEmoji(flag)
+    if (entry)
+      return entry
+  }
+
+  const tokens = text
+    .split(REGION_TEXT_SEPARATOR_REGEX)
+    .map(token => token.trim())
+    .filter(Boolean)
+
+  for (const token of tokens) {
+    const entry = getRegionEntryByText(token)
+    if (entry)
+      return entry
+  }
+
+  const normalizedText = tokens.join(' ').toLowerCase()
+  if (!normalizedText)
+    return null
+
+  for (const [emoji, info] of Object.entries(emojiToRegionMap)) {
+    const aliases = [info.en, info.zh, ...info.aliases]
+      .map(alias => alias.toLowerCase().trim())
+      .filter(alias => alias.length > 2 || CJK_UNIFIED_IDEOGRAPH_REGEX.test(alias))
+
+    if (aliases.some(alias => normalizedText === alias || normalizedText.includes(alias)))
+      return { emoji, en: info.en, zh: info.zh, code: info.code, aliases: info.aliases }
+  }
+
+  return null
+}
 
 function getRegionEntry(region: string | null | undefined): RegionEntry | null {
   if (!region?.trim())
     return null
 
   const trimmed = region.trim()
-  const direct = emojiToRegionMap[trimmed]
+  const direct = getRegionEntryByEmoji(trimmed)
   if (direct)
-    return { emoji: trimmed, en: direct.en, zh: direct.zh, code: direct.code, aliases: direct.aliases }
+    return direct
 
-  const lowerRegion = trimmed.toLowerCase()
-  for (const [emoji, info] of Object.entries(emojiToRegionMap)) {
-    if (info.code.toLowerCase() === lowerRegion || info.aliases.some(alias => alias.toLowerCase() === lowerRegion))
-      return { emoji, en: info.en, zh: info.zh, code: info.code, aliases: info.aliases }
-  }
-
-  return null
+  return getRegionEntryByText(trimmed) ?? getRegionEntryFromMixedText(trimmed)
 }
 
 /**
@@ -1638,9 +1687,25 @@ export function getSupportedRegions(): string[] {
 export function getRegionCode(regionEmoji: string): string {
   const regionInfo = getRegionEntry(regionEmoji)
   if (!regionInfo)
-    return regionEmoji
+    return regionEmoji.trim()
 
   return regionInfo.code
+}
+
+/**
+ * 获取可用于 /images/flags/*.svg 的地区代码。
+ * 未识别地区返回空字符串，避免浏览器显示破图。
+ */
+export function getRegionFlagCode(regionEmoji: string | null | undefined): string {
+  const regionInfo = getRegionEntry(regionEmoji)
+  if (regionInfo)
+    return regionInfo.code
+
+  const trimmed = regionEmoji?.trim() ?? ''
+  if (ISO_REGION_CODE_REGEX.test(trimmed))
+    return trimmed.toUpperCase()
+
+  return ''
 }
 
 /**

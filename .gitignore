@@ -8,7 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.npm-cache
 .DS_Store
 dist
 dist-ssr
@@ -47,5 +46,4 @@ test-results/
 
 # Theme build output
 komari-theme-*.zip
-!komari-glassmorphism-lite-build-*.zip
 bun.lock

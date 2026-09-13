@@ -1,6 +1,6 @@
 <div align="center">
 
-# Komari Glassmorphism Lite
+# 🌌 Komari Glassmorphism
 
 ## 给 Komari Monitor 的一套「玻璃拟态 · 运维驾驶舱」主题
 
@@ -37,14 +37,42 @@
 
 | 项目     | 说明                                                      |
 | :------- | :-------------------------------------------------------- |
-| 当前版本 | **v3.3.4**                                                |
+| 当前版本 | **v3.3.7**                                                |
 | 主题定位 | Komari Monitor 可导入 zip 主题，不是普通 Web App 部署包   |
 | 视觉风格 | 毛玻璃卡片、动态背景、浅色 / 深色 / 北京时间自动日夜模式  |
 | 数据能力 | Metric Store 优先，旧接口自动 fallback，兼容 Komari 1.2.x |
 | 高级工具 | 拓扑、性价比、健康摘要、快照导出、访客安全审计            |
-| 发布产物 | `komari-glassmorphism-lite-build-<short-sha>.zip`         |
+| 发布产物 | `komari-theme-Glassmorphism-build-<short-sha>.zip`        |
 
 > 好看只是外壳。v3 真正的重点，是把 Metric、Ping、流量、费用、健康分析和运维工具整合成日常真的会打开来看的监控面板。
+
+---
+
+## 📈 v3.3.7 累计流量历史修复
+
+- 修复节点详情历史图中累计上传、下载流量被按平均值降采样而偏低的问题
+- `net.total.up` 与 `net.total.down` 现在按时间桶最后一个值展示，保留累计计数器语义
+- 普通负载指标继续使用平均值聚合，不影响实时流量、流量配额、Agent 上报或后端记账
+- 增加累计流量 RPC 聚合参数的浏览器回归检查
+
+---
+
+## 🗺️ v3.3.6 平铺地图总览卡片修复
+
+- 修复 `tiled` 平铺地图模式强制使用固定卡片、忽略首页总览卡片方案的问题
+- 平铺地图、球形地球和隐藏地球三种布局现在统一读取同一份卡片配置与顺序
+- 增加平铺地图自定义卡片数量及顺序的浏览器回归检查
+- 新增 Code Quality 工作流，PR 与 `main` 推送自动执行 lint 和 build
+
+---
+
+## 📡 v3.3.5 Ping 任务排序修复
+
+- 详情页延迟任务卡片、图例和颜色顺序与后台 Ping 任务排序保持一致
+- 详情负载面板中的 Ping 延迟与丢包指标线使用同一后台顺序
+- 新指标统计接口返回乱序时，不再覆盖 `public:getPublicPingTasks` 的任务顺序
+- 指标接口独有的未知任务按数值 ID 稳定追加，兼容后端升级过程中的短暂数据差异
+- 增加后台顺序、统计顺序和 ID 顺序相互冲突的确定性回归检查
 
 ---
 
@@ -428,7 +456,7 @@ API / RPC
 Komari 后台支持直接填写仓库地址并拉取最新 Release：
 
 ```text
-https://github.com/sanrokamlan-prog/komari-theme-Glassmorphism
+https://github.com/JudiLite/Komari-Glassmorphism-Lite
 ```
 
 ### 方式二：手动安装 Release
@@ -484,6 +512,26 @@ dist/
 ## 📝 更新日志
 
 <details open>
+<summary><strong>v3.3.6 · 平铺地图总览卡片修复</strong></summary>
+
+- 平铺地图不再覆盖用户选择的首页总览卡片方案
+- 自定义卡片 keys 的数量和顺序在全部地球布局中保持一致
+- 增加平铺布局的聚焦浏览器回归断言
+- GitHub Actions 自动执行 lint、未提交格式变化检查和 build
+
+</details>
+
+<details>
+<summary><strong>v3.3.5 · Ping 任务排序修复</strong></summary>
+
+- 延迟任务卡片、图例、颜色和指标线统一遵循后台公开任务顺序
+- 修复新版 Ping 指标统计数组乱序导致前后台显示不一致的问题
+- 未知任务使用稳定 ID 回退，不影响后台已知任务的位置
+- 增加三套顺序相互冲突的聚焦回归覆盖
+
+</details>
+
+<details>
 <summary><strong>v3.3.4 · 到期预警与历史 CPU 修复</strong></summary>
 
 - 剩余 5 天内标红、6–10 天标黄，无效日期显示 `-`

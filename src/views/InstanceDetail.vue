@@ -18,9 +18,10 @@ import { useNodesStore } from '@/stores/nodes'
 import { formatCityNameZh } from '@/utils/cityNameHelper'
 import { getCpuBenchmarkRating, getPassMarkCpuLookupUrl } from '@/utils/cpuBenchmark'
 import * as financeHelper from '@/utils/financeHelper'
+import { gpuUsageFromStatus } from '@/utils/gpuHelper'
 import { formatBytesPerSecondWithConfig, formatBytesWithConfig, formatUptimeWithFormat } from '@/utils/helper'
 import { getOSImage, getOSName } from '@/utils/osImageHelper'
-import { getRegionCode, getRegionDisplayName, getRegionFlagCode } from '@/utils/regionHelper'
+import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
 
 import { formatPrice, formatPriceWithCycle, getExpireStatus, getExpireText, isFreePrice, parseTags } from '@/utils/tagHelper'
 
@@ -183,22 +184,6 @@ const formatBytes = (bytes: number) => formatBytesWithConfig(bytes, appStore.byt
 const formatBytesPerSecond = (bytes: number) => formatBytesPerSecondWithConfig(bytes, appStore.byteDecimals)
 const formatUptime = (seconds: number) => formatUptimeWithFormat(seconds, 'minute')
 const getRegionAltText = (region: string) => getRegionDisplayName(region) || getRegionCode(region)
-const getFlagSrc = (region: string | null | undefined) => {
-  const code = getRegionFlagCode(region)
-  return code ? `/images/flags/${code}.svg` : ''
-}
-
-function handleRegionFlagError(event: Event): void {
-  const image = event.target
-  if (image instanceof HTMLImageElement)
-    image.hidden = true
-}
-
-function handleRegionFlagLoad(event: Event): void {
-  const image = event.target
-  if (image instanceof HTMLImageElement)
-    image.hidden = false
-}
 
 interface InfoItem {
   label: string
@@ -356,8 +341,9 @@ function getDetailMetricCard(key: DetailMetricCardKey): MetricCard {
     case 'cpuUsage':
       return { key, label: 'CPU 使用率', value: (node?.cpu ?? 0).toFixed(1), unit: '%', icon: 'tabler:cpu' }
     case 'gpuUsage': {
-      const hasGpu = Boolean(node?.gpu_name?.trim()) || (node?.gpu ?? 0) > 0
-      return { key, label: 'GPU 使用率', value: hasGpu ? (node?.gpu ?? 0).toFixed(1) : '-', unit: hasGpu ? '%' : undefined, icon: 'tabler:device-desktop-analytics', tooltip: node?.gpu_name?.trim() || undefined }
+      const gpu = gpuUsageFromStatus(node)
+      const hasGpu = Boolean(node?.gpu_name?.trim()) || gpu > 0
+      return { key, label: 'GPU 使用率', value: hasGpu ? gpu.toFixed(1) : '-', unit: hasGpu ? '%' : undefined, icon: 'tabler:device-desktop-analytics', tooltip: node?.gpu_name?.trim() || undefined }
     }
     case 'memoryUsage':
       return { key, label: '内存使用率', value: memoryUsage === null ? '-' : memoryUsage.toFixed(1), unit: memoryUsage === null ? undefined : '%', icon: 'icon-park-outline:memory', tooltip: `${formatBytes(node?.ram ?? 0)} / ${formatBytes(node?.mem_total ?? 0)}` }
@@ -510,14 +496,7 @@ const metricCards = computed<MetricCard[]>(() => appStore.detailMetricCardOrder.
           <Icon icon="tabler:arrow-left" :width="16" :height="16" />
         </Button>
         <div class="min-w-0 text-lg font-bold flex gap-2 items-center">
-          <img
-            v-if="getFlagSrc(data.region)"
-            :src="getFlagSrc(data.region)"
-            :alt="getRegionAltText(data.region)"
-            class="size-6"
-            @error="handleRegionFlagError"
-            @load="handleRegionFlagLoad"
-          >
+          <img :src="`/images/flags/${getRegionCode(data.region)}.svg`" :alt="getRegionAltText(data.region)" class="size-6">
           <span class="truncate">{{ data.name }}</span>
         </div>
         <Badge :variant="data.online ? 'default' : 'destructive'" class="text-xs !rounded">

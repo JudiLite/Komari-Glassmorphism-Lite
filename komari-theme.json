@@ -1,10 +1,10 @@
 {
-  "name": "Komari Glassmorphism Lite",
-  "short": "GlassLite",
-  "description": "A Glassmorphism theme for Komari with China Unicom, China Telecom and China Mobile latency/loss panels",
-  "version": "3.3.4",
-  "author": "sanrokamlan",
-  "url": "https://github.com/sanrokamlan-prog/komari-theme-Glassmorphism",
+  "name": "Komari Glassmorphism",
+  "short": "Glassmorphism",
+  "description": "A Glassmorphism theme for Komari",
+  "version": "3.3.7",
+  "author": "JudiLite",
+  "url": "https://github.com/JudiLite/Komari-Glassmorphism-Lite",
   "preview": "preview.png",
   "configuration": {
     "type": "managed",

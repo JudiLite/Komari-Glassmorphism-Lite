@@ -13,6 +13,7 @@ import { UI_CONFIG } from '@/constants/ui'
 import { useAppStore } from '@/stores/app'
 import { useNodesStore } from '@/stores/nodes'
 import * as financeHelper from '@/utils/financeHelper'
+import { gpuUsageFromStatus } from '@/utils/gpuHelper'
 import { formatBytesPerSecondSplit, formatBytesSplit } from '@/utils/helper'
 import {
   getConnectionCount,
@@ -249,11 +250,12 @@ const onlineStats = computed<OnlineStats>(() => {
     stats.uploadPeakNode = updateTopMetric(stats.uploadPeakNode, node, node.net_out || 0)
     stats.downloadPeakNode = updateTopMetric(stats.downloadPeakNode, node, node.net_in || 0)
     stats.connectionPeakNode = updateTopMetric(stats.connectionPeakNode, node, getConnectionCount(node))
-    const hasGpu = Boolean(node.gpu_name?.trim()) || (node.gpu || 0) > 0
+    const gpu = gpuUsageFromStatus(node)
+    const hasGpu = Boolean(node.gpu_name?.trim()) || gpu > 0
     if (hasGpu) {
-      stats.totalGpu += node.gpu || 0
+      stats.totalGpu += gpu
       stats.gpuNodeCount += 1
-      stats.gpuPeakNode = updateTopMetric(stats.gpuPeakNode, node, node.gpu || 0)
+      stats.gpuPeakNode = updateTopMetric(stats.gpuPeakNode, node, gpu)
     }
     if (isHighLoadNode(node, appStore.homeHighLoadThreshold))
       stats.highLoadNodes.push(node)
@@ -698,19 +700,9 @@ function getCardDefinition(key: GeneralCardKey): GeneralMetricCard {
   }
 }
 
-const tiledDefaultCardKeys: GeneralCardKey[] = [
-  'onlineNodes',
-  'remainingValue',
-  'monthlyCost',
-  'totalTraffic',
-  'uploadSpeed',
-  'downloadSpeed',
-]
-const baseVisibleCards = computed(() => appStore.generalCardOrder.map(getCardDefinition))
-const tiledDefaultCards = computed(() => tiledDefaultCardKeys.map(getCardDefinition))
+const visibleCards = computed(() => appStore.generalCardOrder.map(getCardDefinition))
 const showEarth = computed(() => !appStore.hideEarth)
 const isTiledEarth = computed(() => showEarth.value && appStore.earthRenderer === 'tiled')
-const visibleCards = computed(() => isTiledEarth.value ? tiledDefaultCards.value : baseVisibleCards.value)
 const shouldRenderHeader = computed(() => showEarth.value || visibleCards.value.length > 0)
 const hasExtraCards = computed(() => visibleCards.value.length > 6)
 const wrapperClass = computed(() => {
@@ -828,6 +820,7 @@ onMounted(async () => {
       <CardX
         v-for="(card, index) in visibleCards"
         :key="card.key"
+        :data-general-card-key="card.key"
         hoverable
         :class="[cardClass, getCardPositionClass(index), card.action && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring']"
         content-class="h-full !p-3"

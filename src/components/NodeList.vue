@@ -16,7 +16,7 @@ import { formatCityNameZh } from '@/utils/cityNameHelper'
 import { formatBytesPerSecondWithConfig, formatBytesWithConfig, formatDateTime, formatUptimeWithFormat, getStatus } from '@/utils/helper'
 import { getRealtimeTotalSpeed, getTrafficUsed, getTrafficUsedPercentage, hasTrafficLimit } from '@/utils/nodeMetricsHelper'
 import { getOSImage, getOSName } from '@/utils/osImageHelper'
-import { getRegionCode, getRegionDisplayName, getRegionFlagCode } from '@/utils/regionHelper'
+import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
 import { formatPriceWithCycle, getDaysUntilExpired, getExpireStatus, parseTags } from '@/utils/tagHelper'
 
 interface ColumnConfig {
@@ -211,9 +211,8 @@ const nodeMetadataItemsByUuid = computed(() => {
   return itemsByUuid
 })
 
-function getFlagSrc(region: string | null | undefined): string {
-  const code = getRegionFlagCode(region)
-  return code ? `/images/flags/${code}.svg` : ''
+function getFlagSrc(region: string): string {
+  return `/images/flags/${getRegionCode(region)}.svg`
 }
 
 function getRegionAltText(region: string): string {
@@ -222,18 +221,6 @@ function getRegionAltText(region: string): string {
 
 function hasRegion(region: string | null | undefined): boolean {
   return Boolean(region?.trim())
-}
-
-function handleRegionFlagError(event: Event): void {
-  const image = event.target
-  if (image instanceof HTMLImageElement)
-    image.hidden = true
-}
-
-function handleRegionFlagLoad(event: Event): void {
-  const image = event.target
-  if (image instanceof HTMLImageElement)
-    image.hidden = false
 }
 
 function handleClick(node: NodeData) {
@@ -447,10 +434,8 @@ function buildNodeMetadataItems(node: NodeData): NodeMetadataItem[] {
                 <div v-else-if="col.key === 'name'" class="space-y-0.5 min-w-0" :class="[!node.online && 'blur-sm opacity-30']">
                   <div class="flex gap-1.5 items-center text-[13px] font-semibold text-foreground min-w-0">
                     <img
-                      v-if="getFlagSrc(node.region)" :src="getFlagSrc(node.region)"
+                      v-if="hasRegion(node.region)" :src="getFlagSrc(node.region)"
                       :alt="getRegionAltText(node.region)" class="size-5 rounded-sm shrink-0"
-                      @error="handleRegionFlagError"
-                      @load="handleRegionFlagLoad"
                     >
                     <span class="truncate">{{ node.name }}</span>
                     <button
@@ -496,14 +481,7 @@ function buildNodeMetadataItems(node: NodeData): NodeMetadataItem[] {
                       class="min-w-0 overflow-hidden whitespace-nowrap rounded-md px-1.5 text-[11px] font-medium shadow-none"
                       :class="item.class"
                     >
-                      <img
-                        v-if="item.flagSrc"
-                        :src="item.flagSrc"
-                        :alt="item.value"
-                        class="size-3.5 rounded-[2px] shrink-0"
-                        @error="handleRegionFlagError"
-                        @load="handleRegionFlagLoad"
-                      >
+                      <img v-if="item.flagSrc" :src="item.flagSrc" :alt="item.value" class="size-3.5 rounded-[2px] shrink-0">
                       <Icon v-else-if="item.icon" :icon="item.icon" width="12" height="12" class="shrink-0" />
                       <span class="truncate">{{ item.value }}</span>
                     </Badge>

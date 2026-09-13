@@ -11,7 +11,7 @@ import { useAppStore } from '@/stores/app'
 import { formatBytesPerSecondWithConfig, formatBytesWithConfig, formatDateTime, getStatus, getUptimeDays } from '@/utils/helper'
 import { getDiskPercentage, getMemoryPercentage, getTrafficUsed, getTrafficUsedPercentage, hasTrafficLimit } from '@/utils/nodeMetricsHelper'
 import { getOSImage, getOSName } from '@/utils/osImageHelper'
-import { getRegionCode, getRegionDisplayName, getRegionFlagCode } from '@/utils/regionHelper'
+import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
 import { formatCurrencyValue, formatPriceWithCycle, getDaysUntilExpired, getExpireStatus, getRemainingValue, isFreePrice, parseTags } from '@/utils/tagHelper'
 
 const props = withDefaults(defineProps<{
@@ -190,7 +190,7 @@ function getRegionAltText(region: string): string {
 }
 
 function getFlagSrc(region: string | null | undefined): string {
-  const code = getRegionFlagCode(region)
+  const code = getRegionCode(region)
   return code ? `/images/flags/${code}.svg` : ''
 }
 

@@ -190,7 +190,7 @@ function getRegionAltText(region: string): string {
 }
 
 function getFlagSrc(region: string | null | undefined): string {
-  const code = getRegionCode(region) || ''
+  const code = getRegionCode(region ?? '') || ''
   return code ? `/images/flags/${code}.svg` : ''
 }
 
